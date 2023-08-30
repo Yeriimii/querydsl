@@ -710,4 +710,68 @@ public class QuerydslBasicTest {
     private Predicate allEq(String usernameCond, Integer ageCond) {
         return usernameEq(usernameCond).and(ageEq(ageCond));
     }
+
+    /**
+     * 벌크 업데이트
+     * 모든 벌크 연산은 영속성 컨텍스트를 무시하고 바로 DB에 반영한다.
+     */
+    @Test
+    public void bulkUpdate() {
+
+        //영속성 컨텍스트
+        //member1 = 10 -> DB member1
+        //member2 = 20 -> DB member2
+        //member3 = 30 -> DB member3
+        //member4 = 40 -> DB member4
+
+        long count = queryFactory
+                .update(member)
+                .set(member.username, "비회원")
+                .where(member.age.lt(28))
+                .execute();
+
+        //영속성 컨텍스트도 날려야 DB와 싱크가 맞아진다.
+        em.flush();
+        em.clear();
+
+        //DB
+        //member1 = 10 -> DB 비회원
+        //member2 = 20 -> DB 비회원
+        //member3 = 30 -> DB member3
+        //member4 = 40 -> DB member4
+
+        List<Member> result = queryFactory
+                .selectFrom(member)
+                .fetch();
+
+        for (Member member1 : result) {
+            System.out.println("member1 = " + member1);
+        }
+    }
+
+    /**
+     * 벌크 연산
+     * 덧셈 뺄셈: .add()
+     * 곱하기: multiply()
+     * 나누기: divide()
+     */
+    @Test
+    public void bulkAdd() {
+        queryFactory
+                .update(member)
+                .set(member.age, member.age.add(1))
+                .execute();
+    }
+
+    /**
+     * 벌크 삭제: 18살 이상인 회원 삭제
+     */
+    @Test
+    public void bulkDelete() {
+        long count = queryFactory
+                .delete(member)
+                .where(member.age.gt(18))
+                .execute();
+    }
+
 }
