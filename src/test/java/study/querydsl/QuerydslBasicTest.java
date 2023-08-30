@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 import study.querydsl.dto.MemberDto;
+import study.querydsl.dto.QMemberDto;
 import study.querydsl.dto.UserDto;
 import study.querydsl.entity.Member;
 import study.querydsl.entity.QMember;
@@ -614,6 +615,24 @@ public class QuerydslBasicTest {
                 .select(Projections.constructor(MemberDto.class,
                         member.username,
                         member.age))
+                .from(member)
+                .fetch();
+
+        for (MemberDto memberDto : result) {
+            System.out.println("memberDto = " + memberDto);
+        }
+    }
+
+    /**
+     * MemberDto 생성자에 @QueryProjection 이용 -> Querydsl 미리 컴파일
+     * 장점: 타입 안정성 - 생성자에 없는 멤버변수에 대해 컴파일 에러로 잡을 수 있다.
+     * 단점1: 미리 컴파일 해야함
+     * 단점2: DTO가 querydsl 라이브러리에 의존적이게 된다.
+     */
+    @Test
+    public void findDtoByQueryProjection() {
+        List<MemberDto> result = queryFactory
+                .select(new QMemberDto(member.username, member.age))
                 .from(member)
                 .fetch();
 
